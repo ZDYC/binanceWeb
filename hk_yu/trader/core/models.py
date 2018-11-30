@@ -121,3 +121,142 @@ class Account(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Order(models.Model):
+
+    ORDER_TYPE_LIMIT = 'LIMIT'
+    ORDER_TYPE_MARKET = 'MARKET'
+    ORDER_TYPE_STOP_LOSS = 'STOP_loss'
+    ORDER_TYPE_STOP_LOSS_LIMIT = 'STOP_LOSS_LIMIT'
+    ORDER_TYPE_TAKE_PROFIT = 'TAKE_PROFIT'
+    ORDER_TYPE_TAKE_PROFIT_LIMIT = 'TAKE_PROFIT_LIMIT'
+    ORDER_TYPE_LIMIT_MAKER = 'LIMIT_MAKER'
+
+    SIDE_BUY = 'BUY'
+    SIDE_SELL = 'SELL'
+
+    ORDER_TIF_GTC = 'GTC'
+    ORDER_TIF_IOC = 'IOC'
+    ORDER_TIF_FOK = 'FOK'
+
+    ORDER_STATUS_PREPARE = 'PREPARE'
+    ORDER_STATUS_NEW = 'NEW'
+    ORDER_STATUS_PARTIALLY_FILLED = 'PARTIALLY_FILLED'  # 部份成交
+    ORDER_STATUS_FILLED = 'FILLED'  # 已全部成交
+    ORDER_STATUS_PREPARE_CANCEL = 'PREPARE_CANCEL'  # 本地提交取消，交易平台未提交
+    ORDER_STATUS_CANCELED = 'CANCELED'  # 已取消
+    ORDER_STATUS_PENDING_CANCEL = 'PENDING_CANCEL'  # 正在取消。
+    ORDER_STATUS_REJECTED = 'REJECTED'  # 被拒绝
+    ORDER_STATUS_EXPIRED = 'EXPIRED'  # 已超时
+    ORDER_STATUS_DELETED = 'DELETED'  # 已删除
+
+    # user = models.ForeignKey(settings.AUTH_USER_MODEL, models.SET_NULL,
+    #     null=True, verbose_name='交易员')
+    account = models.ForeignKey(Account, models.SET_NULL, null=True, verbose_name='交易所账号')
+    symbol = models.CharField('交易币对', max_length=50)
+    quantity = models.DecimalField('数量', max_digits=19, decimal_places=8, default=0)
+    time_in_force = models.CharField('有效期', default='GTC', max_length=3,
+        choices=(('GTC', 'GTC'),
+                 ('IOC', 'IOC'),
+                 ('FOK', 'FOK')))
+    price = models.DecimalField('价格', max_digits=19, decimal_places=8)
+    stop_price = models.DecimalField('止盈止损价格', max_digits=19, null=True, 
+                                     blank=True, decimal_places=8, default=None)
+    side = models.CharField('方向', default='SELL', max_length=10,
+                            choices=(('SELL', '卖出'), ('BUY', '买入')))
+    order_type = models.CharField('类型', default='LIMIT', max_length=30,
+                                choices=(('LIMIT', '限价单'),
+                                         ('MARKET', '市价单'),
+                                         ('STOP_LOSS', '止损单'),
+                                         ('STOP_LOSS_LIMIT', '止损限价单'),
+                                         ('TAKE_PROFIT', '获利单'),
+                                         ('TAKE_PROFIT_LIMIT', '获利限价单'),
+                                         ('LIMIT_MAKER', '限价造市')))
+    buy = models.ForeignKey(CryptoCoin, models.SET_NULL, null=True,
+                            verbose_name='买入对象', related_name='buying')
+    sell = models.ForeignKey(CryptoCoin, models.SET_NULL, null=True,
+                            verbose_name='卖出对象', related_name='selling')
+    platform_order_id = models.IntegerField('平台订单号', default=-1, db_index=True)
+    iceberg_quantity = models.DecimalField('冰山交易量', default=0.0, null=True, blank=True, 
+        max_digits=19, decimal_places=8)
+    status = models.CharField('状态', max_length=20, default=ORDER_STATUS_PREPARE,
+                             choices=((ORDER_STATUS_PREPARE, '准备中'),
+                             (ORDER_STATUS_NEW, '新订单'),
+                             (ORDER_STATUS_PARTIALLY_FILLED, '部份完成'),
+                             (ORDER_STATUS_FILLED, '已完成'),
+                             (ORDER_STATUS_PREPARE_CANCEL, '准备取消'),
+                             (ORDER_STATUS_CANCELED, '已取消'),
+                             (ORDER_STATUS_PENDING_CANCEL, '取消中'),
+                             (ORDER_STATUS_REJECTED, '被拒绝'),
+                             (ORDER_STATUS_EXPIRED, '超时'),
+                             (ORDER_STATUS_DELETED, '已删除')))
+    create_at = models.DateTimeField('创建时间', auto_now_add=True)
+    update_at = models.DateTimeField('修改时间', auto_now=True)
+    extra_info = JSONField('其他信息', null=True, blank=True)
+
+    class Meta:
+        verbose_name = '订单'
+        verbose_name_plural = '订单'
+
+    def __str__(self):
+        return f'{self.symbol}({self.pk})'
+
+
+class AssetLog(models.Model):
+
+    ASSETLOG_TYPE_ACCOUNT_IN = 0  # 交易帐号转入资产
+    ASSETLOG_TYPE_ACCOUNT_OUT = 1  # 交易帐号转出资产
+    ASSETLOG_TYPE_ACCOUNT_BUY = 2  # 交易帐号买入
+    ASSETLOG_TYPE_ACCOUNT_SELL = 3  # 交易帐号卖出
+    ASSETLOG_TYPE_ACCOUNT_COMISSION = 4  # 交易帐号交易佣金
+    ASSETLOG_TYPE_TRADER_IN = 10  # 交易员入帐，通常发生在初次分配
+    ASSETLOG_TYPE_TRADER_OUT = 11  # 交易员转出
+    ASSETLOG_TYPE_TRADER_BUY = 12  # 交易员买入
+    ASSETLOG_TYPE_TRADER_SELL = 13  # 交易员卖出
+    ASSETLOG_TYPE_COMISSION_IN = 14  # 本平台手续费收入
+    ASSETLOG_TYPE_COMISSION_OUT = 15  # 交易员交易产生的手续费
+    ASSETLOG_TYPE_TRANSFER_OUT = 16  # 交易员转帐至其他交易员
+    ASSETLOG_TYPE_TRANSFER_IN = 17  # 其他交易员转帐入本交易员
+
+    ASSETLOG_CHOICES = (
+        (ASSETLOG_TYPE_ACCOUNT_IN, '帐号转入'),
+        (ASSETLOG_TYPE_ACCOUNT_OUT, '帐号转出'),
+        (ASSETLOG_TYPE_ACCOUNT_BUY, '帐号买入'),
+        (ASSETLOG_TYPE_ACCOUNT_SELL, '帐号买出'),
+        (ASSETLOG_TYPE_ACCOUNT_COMISSION, '帐号交易手续费'),
+        (ASSETLOG_TYPE_TRADER_IN, '交易员转入'),
+        (ASSETLOG_TYPE_TRADER_OUT, '交易员转出'),
+        (ASSETLOG_TYPE_TRADER_BUY, '交易买入'),
+        (ASSETLOG_TYPE_TRADER_SELL, '交易员卖出'),
+        (ASSETLOG_TYPE_COMISSION_IN, '平台佣金'),
+        (ASSETLOG_TYPE_COMISSION_OUT, '交易员手续费'),
+        (ASSETLOG_TYPE_TRANSFER_OUT, '交易员转帐（转出）'),
+        (ASSETLOG_TYPE_TRANSFER_IN, '交易员转帐（转入）'),
+    )
+    account = models.ForeignKey(Account, models.SET_NULL, blank=True, null=True, verbose_name='交易所账号')
+    # user = models.ForeignKey(settings.AUTH_USER_MODEL, models.SET_NULL, blank=True, null=True, verbose_name='交易员')
+    order = models.ForeignKey(Order, models.SET_NULL, blank=True, null=True, verbose_name='所属订单')
+    # trader = models.ForeignKey(Trader, models.SET_NULL, blank=True, null=True, verbose_name='所属交易')
+    coin = models.ForeignKey(CryptoCoin, models.PROTECT, null=True, verbose_name='资产')
+    coin_type = models.IntegerField('类型', choices=ASSETLOG_CHOICES)
+    quantity = models.DecimalField('数量', max_digits=19, decimal_places=8)
+    effect_account = models.BooleanField('影响账户资产', default=True, editable=False)
+    usdt_value = models.DecimalField('USDT价值', max_digits=19, decimal_places=8, default=0)
+    create_date = models.DateTimeField('发生日期', auto_now_add=True, db_index=True)
+    create_time = models.TimeField('发生时间', auto_now_add=True)
+
+    # content_type = models.ForeignKey(
+    #     ContentType, on_delete=models.SET_NULL, null=True, blank=True)
+    # object_id = models.PositiveIntegerField(null=True, blank=True)
+    # related_object = GenericForeignKey('content_type', 'object_id')
+
+    def __str__(self):
+        tp = dict(AssetLog.ASSETLOG_CHOICES)[self.type]
+        return '类型 %s: 资产：%s 数量：%.8f' % (
+            tp, self.coin_id, self.quantity
+        )
+
+    class Meta:
+        verbose_name = '资产明细'
+        verbose_name_plural = '资产明细'

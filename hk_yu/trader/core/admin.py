@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.conf import settings
-from .models import CryptoCoin, Platform, Account, Market
+from .models import CryptoCoin, Platform, Account, Market, Order, AssetLog
 from django.utils.html import format_html
 
 from datetime import datetime
@@ -74,13 +74,21 @@ class AccountAdmin(admin.ModelAdmin):
  
     list_display = ['platform', 'name', 'description', 'create_at', 'laset_sync_time', 'edit']
     search_fields = ['platform', 'name']
-    list_filter = ['platform', 'create_at']
+    # list_filter = ['platform', 'create_at']
 
 
 class MarketAdmin(admin.ModelAdmin):
     list_display = ['platform', 'symbol']
 
 
+class OrderAdmin(admin.ModelAdmin):
+    list_display = ['symbol']
+    search_fields = ['symbol']
+    list_filter = ['symbol', 'create_at']
+
+
+class AssetLogAdmin(admin.ModelAdmin):
+    list_display = ['symbol']
 
 
 
@@ -88,6 +96,8 @@ admin.site.register(CryptoCoin, CryptoCoinAdmin)
 admin.site.register(Platform, PlatformAdmin)
 admin.site.register(Account, AccountAdmin)
 admin.site.register(Market, MarketAdmin)
+admin.site.register(Order, OrderAdmin)
+admin.site.register(AssetLog)
 
 
 admin.site.site_header = settings.SITE_NAME

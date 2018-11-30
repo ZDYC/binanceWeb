@@ -25,7 +25,7 @@ SECRET_KEY = 'j$a%^!chlp2k0wan(zbq5^)nw+un))58gk+g$7o^&ffl&jb+-='
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.0.106']
+ALLOWED_HOSTS = ['192.168.0.103']
 
 SITE_NAME = 'binance_dennis_web'
 
@@ -47,7 +47,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'core',
-    'member',
+    # 'member',
 ]
 
 MIDDLEWARE = [
@@ -134,4 +134,4 @@ USE_TZ = False
 
 STATIC_URL = '/static/'
 
-AUTH_USER_MODEL = 'member.User'
+# AUTH_USER_MODEL = 'member.User'

@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.conf import settings
-from .models import CryptoCoin, Platform, Account, Market, Order, AssetLog, Trade
+from .models import CryptoCoin, Platform, Account, Market, Order, AssetLog, Trade, FrozenAsset
 from django.utils.html import format_html
 
 from datetime import datetime
@@ -99,6 +99,10 @@ class TradeAdmin(admin.ModelAdmin):
     # list
 
 
+class FrozenAssetAdmin(admin.ModelAdmin):
+    list_display = ['coin', 'quantity', 'account',
+                    'order', 'free', 'manual']
+
 
 
 admin.site.register(CryptoCoin, CryptoCoinAdmin)
@@ -108,6 +112,7 @@ admin.site.register(Market, MarketAdmin)
 admin.site.register(Order, OrderAdmin)
 admin.site.register(AssetLog)
 admin.site.register(Trade)
+admin.site.register(FrozenAsset)
 
 
 admin.site.site_header = settings.SITE_NAME

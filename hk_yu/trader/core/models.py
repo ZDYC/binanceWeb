@@ -224,6 +224,34 @@ class Trade(models.Model):
         # unique_together = []
 
 
+class FrozenAsset(models.Model):
+    account = models.ForeignKey(
+        Account, models.SET_NULL, blank=True, null=True, verbose_name='交易员账号')
+    # user = models.ForeignKey(
+        # settings.AUTH_USER_MODEL, models.SET_NULL, blank=True, null=True, verbose_name='交易员')
+    order = models.ForeignKey(
+        Order, models.SET_NULL, blank=True, null=True, verbose_name='所属订单')
+    coin = models.ForeignKey(
+        CryptoCoin, models.PROTECT, null=True, verbose_name='资产')
+    quantity = models.DecimalField('数量', max_digits=19, decimal_places=8)
+    free = models.BooleanField('是否解冻', default=False, help_text='交易成功返回的')
+    manual = models.BooleanField('是否人工冻结', default=False)
+    create_at = models.DateTimeField('发生时间', auto_now_add=True)
+    # creator = models.ForeignKey(
+        # settings.AUTH_USER_MODEL, models.SET_NULL,
+        # blank=True, null=True, verbose_name='操作人', related_name='frozen')
+    # content_type = models.ForeignKey(
+    #     ContentType, on_delete=models.SET_NULL, null=True, blank=True)
+    # object_id = models.PositiveIntegerField(null=True, blank=True)
+    # related_object = GenericForeignKey('content_type', 'object_id')
+
+    # objects = FrozenAssetManager()
+
+    class Meta:
+        verbose_name = '冻结资产'
+        verbose_name_plural = '冻结资产'
+
+
 class AssetLog(models.Model):
 
     ASSETLOG_TYPE_ACCOUNT_IN = 0  # 交易帐号转入资产

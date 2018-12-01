@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.conf import settings
-from .models import CryptoCoin, Platform, Account, Market, Order, AssetLog
+from .models import CryptoCoin, Platform, Account, Market, Order, AssetLog, Trade
 from django.utils.html import format_html
 
 from datetime import datetime
@@ -91,6 +91,15 @@ class AssetLogAdmin(admin.ModelAdmin):
     list_display = ['symbol']
 
 
+class TradeAdmin(admin.ModelAdmin):
+    list_display = ['order', 'quantity', 'price', 'commission',
+                    'commission_asset', 'platform_trade_id',
+                    'platform_order_id', 'trade_time_str']
+    list_filter = ['is_buyer', 'is_maker']
+    # list
+
+
+
 
 admin.site.register(CryptoCoin, CryptoCoinAdmin)
 admin.site.register(Platform, PlatformAdmin)
@@ -98,6 +107,7 @@ admin.site.register(Account, AccountAdmin)
 admin.site.register(Market, MarketAdmin)
 admin.site.register(Order, OrderAdmin)
 admin.site.register(AssetLog)
+admin.site.register(Trade)
 
 
 admin.site.site_header = settings.SITE_NAME

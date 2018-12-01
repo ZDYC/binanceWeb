@@ -203,6 +203,27 @@ class Order(models.Model):
         return f'{self.symbol}({self.pk})'
 
 
+class Trade(models.Model):
+    order = models.ForeignKey(Order, models.SET_NULL, null=True, blank=True, verbose_name='订单')
+    quantity = models.DecimalField('数量', max_digits=19, decimal_places=8)
+    price = models.DecimalField('价格', max_digits=19, decimal_places=8)
+    commission = models.DecimalField('佣金', max_digits=19, decimal_places=8)
+    commission_asset = models.CharField('佣金结算货币', max_length=20)
+    is_buyer = models.BooleanField('是否买家')
+    is_maker = models.BooleanField('是否造市', default=False)
+    is_best_match = models.BooleanField('最佳匹配', default=True)
+    platform_trade_id = models.IntegerField('平台交易号', default=-1)
+    platform_order_id = models.IntegerField('平台订单号', default=-1, db_index=True)
+    trade_time = models.BigIntegerField('交易时间')
+    create_at = models.DateTimeField('记录时间', auto_now_add=True)
+    extra_info = JSONField('其他信息', null=True, blank=True)
+
+    class Meta:
+        verbose_name = '交易'
+        verbose_name_plural = '交易'
+        # unique_together = []
+
+
 class AssetLog(models.Model):
 
     ASSETLOG_TYPE_ACCOUNT_IN = 0  # 交易帐号转入资产

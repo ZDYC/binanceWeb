@@ -25,7 +25,7 @@ SECRET_KEY = 'j$a%^!chlp2k0wan(zbq5^)nw+un))58gk+g$7o^&ffl&jb+-='
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.0.103']
+ALLOWED_HOSTS = []
 
 SITE_NAME = 'binance_dennis_web'
 
@@ -84,14 +84,21 @@ WSGI_APPLICATION = 'trader.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'HOST': '127.0.0.1',
+#         'NAME': 'trader',
+#         'USER': 'root',
+#         'PASSWORD': '123456',
+#         'PORT': '3306'
+#     }
+# }
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'HOST': '127.0.0.1',
-        'NAME': 'server_hk',
-        'USER': 'root',
-        'PASSWORD': '654321',
-        'PORT': '3306'
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
 

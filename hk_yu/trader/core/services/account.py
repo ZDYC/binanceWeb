@@ -18,6 +18,7 @@ def binance_cli(account=None):
     if account:
         key = account.key
         secret = account.secret
+        # print(key, secret)
     else:
         key = settings.BINANCE_KEY
         secret = settings.BINANCE_SECRET
@@ -32,17 +33,18 @@ def inital_account(account):
 
 
 def inital_binance_account_balance(account):
-    log.info(f'开始初始化交易账号:{account.name}')
+    log.info('开始初始化交易账号:{account.name}')
     try:
         cli = binance_cli(account)
-        rsp = cli(account)
+        rsp = cli.get_account()
     except BinanceAPIException as e:
         raise ExchangeException(e.code, e.message)
     except BinanceRequestException as e:
         raise ExchangeException(-1, e.message)
-
+    
+    print(rsp)
     with transaction.atomic():
-        for item in rsp['binance']:
+        for item in rsp['balances']:
             # if Decimal(item['free']) == Decimal('0.0'):
                 # continue
             # print(f'asset: {item['asset']}')
@@ -50,7 +52,7 @@ def inital_binance_account_balance(account):
             try:
                 coin = CryptoCoin.objects.get(pk=item['asset'])
             except CryptoCoin.DoesNotExist:
-                coin = CryptoCoin(id=item['asset'], name=item['asset'])
+                coin = CryptoCoin(coinId=item['asset'], name=item['asset'])
                 coin.save()
         account.can_trade = rsp['canTrade']
         account.can_withdraw = rsp['canWithdraw']

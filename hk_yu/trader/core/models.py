@@ -75,7 +75,8 @@ class Market(models.Model):
         unique_together = ['platform', 'symbol']
 
     def __str__(self):
-        return f'{self.symbol}@{self.platform.name}'
+        return self.symbol
+        # return f'{self.symbol}@{self.platform.name}'
 
 
 class Account(models.Model):
@@ -200,7 +201,8 @@ class Order(models.Model):
         verbose_name_plural = '订单'
 
     def __str__(self):
-        return f'{self.symbol}({self.pk})'
+        return self.symbol
+        # return f'{self.symbol}({self.pk})'
 
 
 class Trade(models.Model):

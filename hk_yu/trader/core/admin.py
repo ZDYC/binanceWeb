@@ -1,7 +1,9 @@
 from django.contrib import admin
 from django.conf import settings
 from .models import CryptoCoin, Platform, Account, Market, Order, AssetLog, Trade, FrozenAsset
+from .exceptions import ExchangeException
 from django.utils.html import format_html
+from django.contrib import messages
 
 from datetime import datetime
 from .services import account
@@ -43,13 +45,14 @@ class AccountAdmin(admin.ModelAdmin):
         if (not change) or (obj.laset_sync == 0):
             log.info(f'新账号(id:{obj.id})或未同步，去同步一下')
             try:
+                print(obj)
                 account.inital_account(obj)
             except ExchangeException as e:
-                log.exception('账号执行同步失败', exc_info=True)
-                messages.warning(request, f'账号未能验证, 原因:{e.message}')
+                log.exception(f'账号执行同步失败', exc_info=True)
+                messages.warning(request, '账号未能验证, 原因:{e.message}')
             except Exception:
-                log.exception('账号执行同步失败', exc_info=True)
-                message.warning(request, '账号未能验证并初始, 账号暂时不可用')
+                log.exception(f'账号执行同步失败', exc_info=True)
+                messages.warning(request, '账号未能验证并初始, 账号暂时不可用')
 
     def delete_model(self, request, obj):
         """删除数据

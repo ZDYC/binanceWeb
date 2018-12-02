@@ -2,6 +2,7 @@ from django.db import models
 
 from collections import namedtuple
 from jsonfield import JSONField
+from . managers import AssetManager
 
 
 class CryptoCoin(models.Model):
@@ -301,6 +302,8 @@ class AssetLog(models.Model):
     #     ContentType, on_delete=models.SET_NULL, null=True, blank=True)
     # object_id = models.PositiveIntegerField(null=True, blank=True)
     # related_object = GenericForeignKey('content_type', 'object_id')
+
+    objects = AssetManager()
 
     def __str__(self):
         tp = dict(AssetLog.ASSETLOG_CHOICES)[self.type]

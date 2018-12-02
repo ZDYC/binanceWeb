@@ -5,7 +5,8 @@ from decimal import Decimal
 from ..exceptions import ExchangeException
 from binance.client import Client
 from binance.exceptions import BinanceAPIException, BinanceRequestException
-from ..models import CryptoCoin
+from ..models import CryptoCoin, AssetLog
+from core.tasks import start_ws_process
 from django.conf import settings
 from django.db import transaction
 
@@ -18,7 +19,6 @@ def binance_cli(account=None):
     if account:
         key = account.key
         secret = account.secret
-        # print(key, secret)
     else:
         key = settings.BINANCE_KEY
         secret = settings.BINANCE_SECRET
@@ -42,18 +42,28 @@ def inital_binance_account_balance(account):
     except BinanceRequestException as e:
         raise ExchangeException(-1, e.message)
     
-    print(rsp)
     with transaction.atomic():
         for item in rsp['balances']:
             # if Decimal(item['free']) == Decimal('0.0'):
-                # continue
+            #     continue
             # print(f'asset: {item['asset']}')
+            # print('asset,' + str(item['asset']))
             # assert Decimal(item['locked']) == Decimal('0.0'),\
+            #      f'found locked {item['asset']}'
             try:
                 coin = CryptoCoin.objects.get(pk=item['asset'])
             except CryptoCoin.DoesNotExist:
+                # 保存所有合法币
                 coin = CryptoCoin(coinId=item['asset'], name=item['asset'])
                 coin.save()
+
+                #资产变更记录
+                AssetLog.objects.log_transfer_to_account(
+                    coin,
+                    Decimal(item['free']),
+                    account
+                )
+
         account.can_trade = rsp['canTrade']
         account.can_withdraw = rsp['canWithdraw']
         account.can_deposit = rsp['canDeposit']
@@ -64,6 +74,9 @@ def inital_binance_account_balance(account):
         account.last_sync = rsp['updateTime']
         account.extra_info = {'balances': rsp['balances']}
         account.save()
+
+        #启动websocket线程
+        # start_ws_process.delay(account.id)
 
 
 

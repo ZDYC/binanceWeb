@@ -34,7 +34,7 @@ class AccountAdmin(admin.ModelAdmin):
         return dt.strftime(fmt)
 
     def edit(self, account):
-        tpl = f"""
+        tpl = """
         <span><a href="#" @click="checkAsset({account.id});">查看资产</a></span>
         &nbsp;&nbsp
         """
@@ -43,21 +43,21 @@ class AccountAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
         if (not change) or (obj.laset_sync == 0):
-            log.info(f'新账号(id:{obj.id})或未同步，去同步一下')
+            log.info('新账号(id:{obj.id})或未同步，去同步一下')
             try:
-                print(obj)
+                # print(obj)
                 account.inital_account(obj)
             except ExchangeException as e:
-                log.exception(f'账号执行同步失败', exc_info=True)
+                log.exception('账号执行同步失败', exc_info=True)
                 messages.warning(request, '账号未能验证, 原因:{e.message}')
             except Exception:
-                log.exception(f'账号执行同步失败', exc_info=True)
+                log.exception('账号执行同步失败', exc_info=True)
                 messages.warning(request, '账号未能验证并初始, 账号暂时不可用')
 
     def delete_model(self, request, obj):
         """删除数据
         """
-        log.info(f'将删除交易所帐号 {obj.name}')
+        log.info('将删除交易所帐号 {obj.name}')
         # if obj.platform.slug == 'binance':
             # remove_ws_process.delay(obj.id)
         super().delete_model(request, obj)
@@ -75,7 +75,7 @@ class AccountAdmin(admin.ModelAdmin):
     edit.short_description = '操作'
     laset_sync_time.short_description = '最后更新时间'
  
-    list_display = ['platform', 'name', 'description', 'create_at', 'laset_sync_time', 'edit']
+    list_display = ['platform', 'name', 'description', 'create_at', 'laset_sync_time']
     search_fields = ['platform', 'name']
     # list_filter = ['platform', 'create_at']
 

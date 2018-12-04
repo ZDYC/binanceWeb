@@ -58,11 +58,11 @@ def inital_binance_account_balance(account):
                 coin.save()
 
                 #资产变更记录
-                AssetLog.objects.log_transfer_to_account(
-                    coin,
-                    Decimal(item['free']),
-                    account
-                )
+                # AssetLog.objects.log_transfer_to_account(
+                #     coin,
+                #     Decimal(item['free']),
+                #     account
+                # )
 
         account.can_trade = rsp['canTrade']
         account.can_withdraw = rsp['canWithdraw']

@@ -36,7 +36,7 @@ def inital_binance_account_balance(account):
     log.info('开始初始化交易账号:{account.name}')
     try:
         cli = binance_cli(account)
-        rsp = cli.get_account()
+        rsp = cli.get_account() 
     except BinanceAPIException as e:
         raise ExchangeException(e.code, e.message)
     except BinanceRequestException as e:

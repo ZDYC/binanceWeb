@@ -1,0 +1,327 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_list %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" type="text/css" href="{% static "admin/css/changelists.css" %}" />
+  {% if cl.formset %}
+    <link rel="stylesheet" type="text/css" href="{% static "admin/css/forms.css" %}" />
+  {% endif %}
+  {% if cl.formset or action_form %}
+    <script type="text/javascript" src="{% url 'admin:jsi18n' %}"></script>
+  {% endif %}
+  {{ media.css }}
+  {% if not actions_on_top and not actions_on_bottom %}
+    <style>
+      #changelist table thead th:first-child {width: inherit}
+    </style>
+  {% endif %}
+{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+{{ media.js }}
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }} app-{{ opts.app_label }} model-{{ opts.model_name }} change-list{% endblock %}
+
+{% if not is_popup %}
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+&rsaquo; <a href="{% url 'admin:app_list' app_label=cl.opts.app_label %}">{{ cl.opts.app_config.verbose_name }}</a>
+&rsaquo; {{ cl.opts.verbose_name_plural|capfirst }}
+</div>
+{% endblock %}
+{% endif %}
+
+{% block coltype %}flex{% endblock %}
+
+{% block content %}
+  <div id="content-main">
+    {% block object-tools %}
+        <ul class="object-tools">
+          {% block object-tools-items %}
+            {% if has_add_permission %}
+            <li>
+              {% url cl.opts|admin_urlname:'add' as add_url %}
+              <a href="{% add_preserved_filters add_url is_popup to_field %}" class="addlink">
+                {% blocktrans with cl.opts.verbose_name as name %}Add {{ name }}{% endblocktrans %}
+              </a>
+            </li>
+            {% endif %}
+          {% endblock %}
+        </ul>
+    {% endblock %}
+    {% if cl.formset.errors %}
+        <p class="errornote">
+        {% if cl.formset.total_error_count == 1 %}{% trans "Please correct the error below." %}{% else %}{% trans "Please correct the errors below." %}{% endif %}
+        </p>
+        {{ cl.formset.non_form_errors }}
+    {% endif %}
+    <div class="module{% if cl.has_filters %} filtered{% endif %}" id="changelist">
+      {% block search %}{% search_form cl %}{% endblock %}
+      {% block date_hierarchy %}{% date_hierarchy cl %}{% endblock %}
+
+      {% block filters %}
+        {% if cl.has_filters %}
+          <div id="changelist-filter">
+            <h2>{% trans 'Filter' %}</h2>
+            {% for spec in cl.filter_specs %}{% admin_list_filter cl spec %}{% endfor %}
+          </div>
+        {% endif %}
+      {% endblock %}
+
+      <form id="changelist-form" method="post"{% if cl.formset.is_multipart %} enctype="multipart/form-data"{% endif %} novalidate>{% csrf_token %}
+      {% if cl.formset %}
+        <div>{{ cl.formset.management_form }}</div>
+      {% endif %}
+
+      {% block result_list %}
+          {% if action_form and actions_on_top and cl.show_admin_actions %}{% admin_actions %}{% endif %}
+          {% result_list cl %}
+          {% if action_form and actions_on_bottom and cl.show_admin_actions %}{% admin_actions %}{% endif %}
+      {% endblock %}
+      {% block pagination %}{% pagination cl %}{% endblock %}
+      </form>
+      {% verbatim %}
+      <el-dialog :title="currentAsset.name + ' 的资产'" :visible.sync="show_list_dialog">
+        <el-table :data=currentAsset.assets>
+          <el-table-column property="asset" label="资产" ></el-table-column>
+          <el-table-column property="total" label="总量"></el-table-column>
+          <el-table-column property="allocated" label="交易员持有量"></el-table-column>
+          <el-table-column property="locked" label="冻结额度"></el-table-column>
+          <el-table-column property="free" label="可用额度"></el-table-column>
+        </el-table>
+      </el-dialog>
+
+      <el-dialog :title="'为 ' + currentUser.name + ' 划入资产'" :visible.sync="show_assign_dialog" @close="close_assign()">
+        <el-form :model="form" :rules="rules" ref="form">
+          <el-form-item label="资产类型" label-width="100px" prop="asset">
+            <!-- <el-input v-model="form.asset" auto-complete="off"></el-input> -->
+            <el-autocomplete
+              v-model="form.asset"
+              :fetch-suggestions="querySearch"
+              placeholder="请输入资产名称"
+              :trigger-on-focus="true"
+              @select="handleSelect"
+              value-key="asset"
+              @change="assetChanged"
+            ></el-autocomplete>
+          </el-form-item>
+          <el-form-item label="划入数量" label-width="100px" prop="quantity">
+            <el-input v-model.number="form.quantity" :placeholder="quantityTip"></el-input>
+          </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+          <el-button @click="close_assign()">取 消</el-button>
+          <el-button type="primary" @click="doAssign('form')" :loading="submitting">{{submitText}}</el-button>
+        </div>
+      </el-dialog>
+      {% endverbatim %}
+    </div>
+  </div>
+  <script type="text/javascript">
+
+    (function($){
+      $(document).ready(function(){
+        new Vue({
+          el: '#changelist',
+          data() {
+            self = this;
+            return {
+              assetList: {},
+              currentAsset: {
+                id: 0,
+                name: '',
+                assets: [
+                  {
+                    asset: '',
+                    free: 0,
+                    locked: 0
+                  }
+                ]
+              },
+              choosenTrader: 0,
+              assetLoading: true,
+              show_list_dialog: false,
+              
+              // 下面开始配资所需属性
+              show_assign_dialog: false,
+              currentUser: {
+                id: 0,
+                name: ''
+              },
+              account_assets: [],
+              form: {
+                asset: '',
+                quantity: ''
+              },
+              avaiableQty: '',
+              choosenAsset: '',  // 选中的资产类型
+              submitting: false,
+              rules: {
+                asset: [{required: true, message: '请输入资产类型', trigger: 'change'}],
+                quantity: [
+                  {required: true, message: '请输入划入数量', trigger: 'blur'},
+                  {type: 'number', message: '必须为数字值', trigger: 'change'},
+                  // {max: this.avaiableQty, message: '不能超过' + this.avaiableQty, trigger: 'change'}
+                  {validator: function(rule, value, callback) {
+                    console.log(rule);
+                    if (rule.field == 'quantity') {
+                      if (value && value > self.avaiableQty) {
+                        callback(new Error('不能超过' + self.avaiableQty.toFixed(8)));
+                      } else {
+                        callback();
+                      }
+                    }
+                  }, trigger: 'change'}
+                ]
+              }  // 表单校验规则
+            }
+          },
+          computed: {
+            quantityTip: function(){
+              // 返回当前选中的asset可用额度
+              form = this.form;
+              var asset = this.account_assets.filter(
+                function(item){
+                  return item.asset.toLowerCase() == form.asset.toLowerCase();
+                }
+              );
+              if (asset.length == 1) {
+                return '可用：' + asset[0].free.toFixed(8);
+              }
+              return '';
+            },
+            submitText: function() {
+              if (this.submitting) {
+                return '划入中...';
+              } else {
+                return '确定';
+              }
+            }
+          },
+          methods: {
+            checkAsset: function(userId) {
+              // 查看assetList里面的缓存是否有该用户的资产数据，无则请求网络获取。
+              this.choosenTrader = userId;
+              this.show_list_dialog = true;
+              if (this.assetList[this.choosenTrader]) {
+                console.log('有数据，使用缓存里面的就可以');
+                this.assetLoading = false;
+                this.currentAsset = this.assetList[this.choosenTrader];
+              } else {
+                // 无数据，请求网络获得
+                this.assetLoading = true;
+                self = this;
+                $.get('/trade/admin/account_asset/' + this.choosenTrader + '/', function(response){
+                  console.log(response);
+                  if (response.errno == 0) {
+                    var data = response.data;
+                    self.currentAsset = data;
+                    self.assetList[self.choosenTrader] = self.currentAsset;
+                    self.assetLoading = false;
+                  } else {
+                    // 提示出错了。
+                    self.$message('查看交易员资产出错：' + response.message);
+                    self.choosenTrader = 0;
+                    self.assetLoading = false;
+                  }
+                });
+              }
+            },
+            assignAsset: function(userId) {
+              this.show_assign_dialog = true;
+              self = this;
+              $.get('/trade/admin/account_asset/', {trader_id: userId}, function(response){
+                console.log(response);
+                if (response.errno == 0) {
+                  var data = response.data;
+                  self.currentUser = {
+                    id: data.account_id,
+                    name: data.account_name
+                  };
+                  self.account_assets = data.assets;
+                } else {
+                  // 加截可用资产失败，可以不处理。
+                  console.log('加载可用资产失败了: ' + response.message)
+                }
+              });
+              
+            },
+            close_assign: function() {
+              this.show_assign_dialog = false;
+              this.form.asset = '';
+              this.form.quantity = '';
+              this.$refs['form'].resetFields();
+            },
+            assetChanged: function() {
+              console.log('changed');
+            },
+            doAssign: function(formName) {
+              // 提交表单
+              self = this;
+              var isValid = false;
+              this.$refs[formName].validate(function(valid, object){
+                if (!valid) {
+                  self.$message.error('请按要求填写表单');
+                }
+                isValid = valid;
+              });
+              console.log(isValid);
+              if (!isValid) {
+                console.log('表单未通过校验');
+                return
+              }
+              this.submitting = true;
+              $.post('/trade/admin/assign_trader/', 
+                     { trader_id: this.currentUser.id, 
+                       asset: this.form.asset, 
+                       quantity: this.form.quantity
+                     }, function(response) {
+                       console.log(response);
+                       if (response.errno == 0) {
+                         console.log('配资成功');
+                         self.$message({
+                           message: '成功为 ' + self.currentUser.name  + ' 配资' + self.form.quantity + '单位的' + self.form.asset,
+                           type: 'success'
+                         })
+                         // 更新缓存
+                         delete self.assetList[self.currentUser.id];
+                         self.close_assign();
+                       } else {
+                         console.log('配资失败: ' + response.message);
+                         self.$message.error(response.message)
+                       }
+                       self.submitting = false;
+                     });
+            },
+            querySearch: function(queryString, cb) {
+              var assets = this.account_assets;
+              console.log(assets);
+              var results = queryString ? assets.filter(this.createFilter(queryString)) : assets;
+              // 调用 callback 返回建议列表的数据
+              console.log(results);
+              cb(results);
+            },
+            createFilter: function(queryString) {
+              return function(item) {
+                console.log(item);
+                result = (item.asset.toLowerCase().indexOf(queryString.toLowerCase()) == 0);
+                console.log(result);
+                return result;
+              };
+            },
+            handleSelect(item) {
+              console.log(item.free);
+              this.avaiableQty = item.free;
+            }
+          }
+        });
+      })
+    })(django.jQuery)
+  </script>
+  
+
+{% endblock %}

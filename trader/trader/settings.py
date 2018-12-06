@@ -48,6 +48,7 @@ INSTALLED_APPS = [
 
     'core',
     'member',
+    'rest_framework'
 ]
 
 MIDDLEWARE = [

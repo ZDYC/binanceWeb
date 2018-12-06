@@ -1,5 +1,9 @@
 Brlapi==0.6.1
+<<<<<<< HEAD
 Django==2.1.4
+=======
+Django==2.0
+>>>>>>> dennis_dev
 Mako==0.9.1
 MarkupSafe==0.18
 apturl==0.5.2ubuntu4.1
@@ -27,6 +31,7 @@ pygobject==3.12.0
 pyparsing==2.0.1
 python-apt==0.9.3.5ubuntu3
 python-debian==0.1.21-nmu2ubuntu2
+<<<<<<< HEAD
 pytz==2018.7
 pyxdg==0.25
 requests==2.2.1
@@ -109,4 +114,39 @@ tzlocal==1.5.1
 urllib3==1.24.1
 vine==1.1.4
 zope.interface==4.6.0
+>>>>>>> dennis_dev
+=======
+pytz==2018.7
+pyxdg==0.25
+requests==2.2.1
+six==1.5.2
+software-center-aptd-plugins==0.0.0
+ubuntu-drivers-common==0.0.0
+ufw==0.34-rc-0ubuntu2
+unattended-upgrades==0.1
+unity-scope-audacious==0.1
+unity-scope-calculator==0.1
+unity-scope-chromiumbookmarks==0.1
+unity-scope-clementine==0.1
+unity-scope-colourlovers==0.1
+unity-scope-devhelp==0.1
+unity-scope-firefoxbookmarks==0.1
+unity-scope-gdrive==0.7
+unity-scope-gmusicbrowser==0.1
+unity-scope-gourmet==0.1
+unity-scope-guayadeque==0.1
+unity-scope-manpages==0.1
+unity-scope-musique==0.1
+unity-scope-openclipart==0.1
+unity-scope-texdoc==0.1
+unity-scope-tomboy==0.1
+unity-scope-virtualbox==0.1
+unity-scope-yelp==0.1
+unity-scope-zotero==0.1
+urllib3==1.7.1
+usb-creator==0.2.23
+virtualenv==16.1.0
+wheel==0.24.0
+xdiagnose==3.6.3build2
+xkit==0.0.0
 >>>>>>> dennis_dev

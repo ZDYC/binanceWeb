@@ -14,9 +14,9 @@ def rsp(data):
 	return HttpResponse(
 		content=json.dumps({
 			"errno": 0,
-			'data': data},
-		content_type='application/json')
-	)
+			'data': data},))
+		# content_type='application/json')
+	# )
 
 
 def error_rsp(code, message):

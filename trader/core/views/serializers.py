@@ -21,6 +21,9 @@ class UserSerializer(serializers.ModelSerializer):
         'close_out_line',
 		]
 
+	def validata(self, attrs):
+		pass 
+
 	def update(self, instance, validated_data):
         password = validated_data.pop('password', '')
         if password:

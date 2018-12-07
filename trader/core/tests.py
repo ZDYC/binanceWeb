@@ -1,4 +1,5 @@
 # from django.test import TestCase
+from binance.client import Client
 import requests
 import json
 
@@ -13,6 +14,8 @@ class Api(object):
 
     url = 'http://127.0.0.1:8000/trade/'
     cookies = None
+    key = 'pw6xPzMtyyY3fWL2l2AEod1cLr1VBni21almeVxFTpWLtgJJd5mEE46SUKB9hpN2'
+    secret = 'wtA7Hr54fDEMssePXIDkPye7eafSIVuUmPcW4TkVok9dwU59K6GQ3hTW7e1kSrKG'
 
     def __post(self, method, **kwargs):
         url = self.url + method + '/'
@@ -60,9 +63,29 @@ class Api(object):
             cookies=self.cookies
         )
 
+    def create_order(self, symbol, price, quantity, side, order_type, time_in_force):
+        return self.__post(
+            method='create_order',
+            symbol=symbol,
+            price=price,
+            quantity=quantity,
+            side=side,
+            order_type=order_type,
+            time_in_force=time_in_force
+        )
+
+    def test_binance(self):
+        client = Client(self.key, self.secret)
+        res = client.get_account()
+        print(res)
+
 
 if __name__ == '__main__':
     api = Api()
     api.login('0001', '123456')
-    print(api.logout().text)
-    print(api.cookies)
+    # print(api.logout().text)
+    # print(api.cookies)
+    res = api.create_order(symbol='EOSBTC', price='0.00123',
+                           quantity=1, side='BUY',
+                           order_type='LIMIT', time_in_force='GTC')
+    print(res.text)

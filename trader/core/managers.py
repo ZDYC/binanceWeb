@@ -1,13 +1,40 @@
 from django.db.models import Manager, Q
 from decimal import Decimal
 
+
 class OrderManager(Manager):
     """订单管理者
     """
-    def create_order(self, account, symbol, quantity, price,
-                     side, buy, sell, trader, type='LIMIT', time_in_force='GTC',
+    def create_order(self, user, account,
+                     symbol, quantity, price,
+                     side, buy, sell,
+                     order_type, time_in_force,
                      stop_price=None, iceberg_qty=None):
-        pass
+        """create order
+        """
+        order = self.model(
+            user=user,
+            account=account,
+            symbol=symbol,
+            quantity=quantity,
+            price=price,
+            side=side,
+            order_type=order_type,
+            buy=buy,
+            sell=sell,
+            time_in_force=time_in_force,
+            stop_price=stop_price)
+        order.save()
+        return order
+
+    def get_orders(self, symbol=None, trader=None, account=None):
+        query = self.get_queryset()
+        if symbol:
+            query = query.filter(symbol=symbol)
+
+        if trader:
+            query = query.filter(user=trader)
+
 
 
 class AssetManager(Manager):

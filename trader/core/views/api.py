@@ -14,6 +14,8 @@ log = logging.getLogger(__name__)
 
 @csrf_exempt
 def login_view(request):
+	"""login
+	"""
 	username = request.POST.get('username', '')
 	password = request.POST.get('password', '')
 	if '' in (username, password):
@@ -25,3 +27,23 @@ def login_view(request):
 		return error_rsp(5003, 'no account for this name, can not login!')
 	login(request, user)
 	return rsp(1)
+
+
+@csrf_exempt
+@login_required
+def logout_view(request):
+	"""logout
+	"""
+	logout(request)
+	return rsp(1)
+
+
+@login_required
+def system_status_view(request):
+	"""system status
+	"""
+	redis_client = get_redis_connection('default')
+	status = 'NORMAL'
+	if (redis_client.get('trader:maintaining')):
+		status = 'MAINTAINING'
+	return rsp({'time': time.time(), 'status': status})

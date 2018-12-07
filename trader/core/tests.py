@@ -63,7 +63,7 @@ class Api(object):
             cookies=self.cookies
         )
 
-    def create_order(self, symbol, price, quantity, side, order_type, time_in_force):
+    def create_order(self, symbol, price, quantity, side, order_type, time_in_force, buy, sell):
         return self.__post(
             method='create_order',
             symbol=symbol,
@@ -87,5 +87,6 @@ if __name__ == '__main__':
     # print(api.cookies)
     res = api.create_order(symbol='EOSBTC', price='0.00123',
                            quantity=1, side='BUY',
-                           order_type='LIMIT', time_in_force='GTC')
+                           order_type='LIMIT', time_in_force='GTC',
+                           buy='BTC', sell='EOS')
     print(res.text)

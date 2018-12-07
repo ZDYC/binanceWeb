@@ -12,7 +12,7 @@ from django.db import transaction
 
 from core.views import rsp, error_rsp
 
-from core.services import order
+from core.services import order as order_service
 
 log = logging.getLogger(__name__)
 
@@ -78,17 +78,15 @@ def create_order_view(request):
     # local order
     with transaction.atomic():
         try:
-            order = order.create_order(
+            order = order_service.create_order(
                 user=user,
                 account=user.account,
                 symbol=symbol,
                 quantity=quantity,
                 price=price,
                 side=side,
-                buy=buy,
-                sell=sell,
                 order_type=order_type,
                 time_in_force=time_in_force)
         except Exception as e:
             print(e)
-    return rsp('%s' % user)
+    return rsp('%s' % user.account)

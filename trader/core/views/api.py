@@ -6,10 +6,16 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 
+from django.db import transaction
+
 from core.views import rsp, error_rsp
 
 
 log = logging.getLogger(__name__)
+
+
+def index_view(request):
+	return rsp('welcome to web of binance')
 
 
 @csrf_exempt
@@ -47,3 +53,32 @@ def system_status_view(request):
 	if (redis_client.get('trader:maintaining')):
 		status = 'MAINTAINING'
 	return rsp({'time': time.time(), 'status': status})
+
+
+@login_required
+def exchange_info(request):
+	"""information of platform
+	"""
+	platform_id = request.user.account.platform_id
+	markets = Market.objects.filter(platform_id=platform_id)
+	symbols = []
+	for market in markets:
+		pass
+
+
+@csrf_exempt
+@login_required
+def create_order_view(request):
+	symbol = request.POST.get('symbol', '').strip().upper()
+	order_type = request.POST.get('order_type')
+	side = request.POST.get('side', '')
+	time_in_force = request.POST.get('time_in_force', '')
+	price = request.POST.get('price')
+	price = Decimal(price) if price else Dzero
+	quantity = request.POST.get('quantity')
+	quantity = Decimal(quantity) if quantity else Dzero
+	user = request.user
+	# local order
+	# with transaction.atomic():
+	# 	try:
+	# 		pass

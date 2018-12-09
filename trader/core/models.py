@@ -54,13 +54,19 @@ class Market(models.Model):
     platform = models.ForeignKey(Platform, models.SET_NULL, null=True,
                                  blank=True, verbose_name='交易平台')
     symbol = models.CharField('币对', max_length=50, help_text='使用大写')
-    coin = models.ForeignKey(CryptoCoin, models.SET_NULL, null=True,
-                             blank=True, verbose_name='交易资产')
+    # coin = models.ForeignKey(CryptoCoin, models.SET_NULL, null=True,
+                             # blank=True, verbose_name='交易资产')
+
+    coin = models.CharField('coin', max_length=33, null=True, blank=True)
+
     coin_precision = models.IntegerField('交易资产精度',  default=8,
         help_text='精确到小数点后8位')
-    currency = models.ForeignKey(CryptoCoin, models.SET_NULL, null=True,
-                                 blank=True, verbose_name='报价资产',
-                                 related_name='currencymarket')
+    # currency = models.ForeignKey(CryptoCoin, models.SET_NULL, null=True,
+                                 # blank=True, verbose_name='报价资产',
+                                 # related_name='currencymarket')
+
+    currency = models.CharField('currency', max_length=33, null=True, blank=True)
+
     currency_precision = models.IntegerField('报价资产精度', default=8,
         help_text='精确到小数点后8位')
     diaable = models.BooleanField('禁止交易', default=False)

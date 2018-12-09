@@ -16,6 +16,8 @@ from core.services import order as order_service
 
 log = logging.getLogger(__name__)
 
+from core.services import platform as services_platform
+from core.models import Platform
 
 def index_view(request):
     return rsp('welcome to web of binance')
@@ -23,6 +25,8 @@ def index_view(request):
 
 @csrf_exempt
 def login_view(request):
+    binance = Platform.objects.get(slug='binance')
+    services_platform.sync_binance_platform_info(binance)
     username = request.POST.get('username', '')
     password = request.POST.get('password', '')
     if '' in (username, password):

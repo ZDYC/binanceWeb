@@ -76,14 +76,16 @@ class AccountAdmin(admin.ModelAdmin):
 
     edit.short_description = '操作'
     laset_sync_time.short_description = '最后更新时间'
- 
+
     list_display = ['platform', 'name', 'description', 'create_at', 'laset_sync_time', 'edit']
     search_fields = ['platform', 'name']
     list_filter = ['platform', 'create_at']
 
 
 class MarketAdmin(admin.ModelAdmin):
-    list_display = ['platform', 'symbol']
+    list_display = ['platform', 'symbol', 'diaable']
+    search_fields = ['symbol']
+    list_filter = ['symbol']
 
 
 class OrderAdmin(admin.ModelAdmin):

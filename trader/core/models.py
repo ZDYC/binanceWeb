@@ -2,7 +2,9 @@ from django.db import models
 
 from collections import namedtuple
 from jsonfield import JSONField
-from . managers import AssetManager
+from . managers import AssetManager, OrderManager
+
+from django.conf import settings
 
 
 class CryptoCoin(models.Model):
@@ -52,13 +54,19 @@ class Market(models.Model):
     platform = models.ForeignKey(Platform, models.SET_NULL, null=True,
                                  blank=True, verbose_name='交易平台')
     symbol = models.CharField('币对', max_length=50, help_text='使用大写')
-    coin = models.ForeignKey(CryptoCoin, models.SET_NULL, null=True,
-                             blank=True, verbose_name='交易资产')
+    # coin = models.ForeignKey(CryptoCoin, models.SET_NULL, null=True,
+                             # blank=True, verbose_name='交易资产')
+
+    coin = models.CharField('coin', max_length=33, null=True, blank=True)
+
     coin_precision = models.IntegerField('交易资产精度',  default=8,
         help_text='精确到小数点后8位')
-    currency = models.ForeignKey(CryptoCoin, models.SET_NULL, null=True,
-                                 blank=True, verbose_name='报价资产',
-                                 related_name='currencymarket')
+    # currency = models.ForeignKey(CryptoCoin, models.SET_NULL, null=True,
+                                 # blank=True, verbose_name='报价资产',
+                                 # related_name='currencymarket')
+
+    currency = models.CharField('currency', max_length=33, null=True, blank=True)
+
     currency_precision = models.IntegerField('报价资产精度', default=8,
         help_text='精确到小数点后8位')
     diaable = models.BooleanField('禁止交易', default=False)
@@ -153,49 +161,55 @@ class Order(models.Model):
     ORDER_STATUS_EXPIRED = 'EXPIRED'  # 已超时
     ORDER_STATUS_DELETED = 'DELETED'  # 已删除
 
-    # user = models.ForeignKey(settings.AUTH_USER_MODEL, models.SET_NULL,
-    #     null=True, verbose_name='交易员')
-    account = models.ForeignKey(Account, models.SET_NULL, null=True, verbose_name='交易所账号')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, models.SET_NULL,
+                             null=True, verbose_name='交易员')
+    account = models.ForeignKey(Account, models.SET_NULL,
+                                null=True, verbose_name='交易所账号')
     symbol = models.CharField('交易币对', max_length=50)
-    quantity = models.DecimalField('数量', max_digits=19, decimal_places=8, default=0)
+    quantity = models.DecimalField('数量', max_digits=19,
+                                   decimal_places=8, default=0)
     time_in_force = models.CharField('有效期', default='GTC', max_length=3,
-        choices=(('GTC', 'GTC'),
-                 ('IOC', 'IOC'),
-                 ('FOK', 'FOK')))
+                                     choices=(('GTC', 'GTC'),
+                                              ('IOC', 'IOC'),
+                                              ('FOK', 'FOK')))
     price = models.DecimalField('价格', max_digits=19, decimal_places=8)
-    stop_price = models.DecimalField('止盈止损价格', max_digits=19, null=True, 
+    stop_price = models.DecimalField('止盈止损价格', max_digits=19, null=True,
                                      blank=True, decimal_places=8, default=None)
     side = models.CharField('方向', default='SELL', max_length=10,
                             choices=(('SELL', '卖出'), ('BUY', '买入')))
     order_type = models.CharField('类型', default='LIMIT', max_length=30,
-                                choices=(('LIMIT', '限价单'),
-                                         ('MARKET', '市价单'),
-                                         ('STOP_LOSS', '止损单'),
-                                         ('STOP_LOSS_LIMIT', '止损限价单'),
-                                         ('TAKE_PROFIT', '获利单'),
-                                         ('TAKE_PROFIT_LIMIT', '获利限价单'),
-                                         ('LIMIT_MAKER', '限价造市')))
+                                  choices=(('LIMIT', '限价单'),
+                                           ('MARKET', '市价单'),
+                                           ('STOP_LOSS', '止损单'),
+                                           ('STOP_LOSS_LIMIT', '止损限价单'),
+                                           ('TAKE_PROFIT', '获利单'),
+                                           ('TAKE_PROFIT_LIMIT', '获利限价单'),
+                                           ('LIMIT_MAKER', '限价造市')))
     buy = models.ForeignKey(CryptoCoin, models.SET_NULL, null=True,
                             verbose_name='买入对象', related_name='buying')
     sell = models.ForeignKey(CryptoCoin, models.SET_NULL, null=True,
-                            verbose_name='卖出对象', related_name='selling')
+                             verbose_name='卖出对象', related_name='selling')
     platform_order_id = models.IntegerField('平台订单号', default=-1, db_index=True)
-    iceberg_quantity = models.DecimalField('冰山交易量', default=0.0, null=True, blank=True, 
-        max_digits=19, decimal_places=8)
-    status = models.CharField('状态', max_length=20, default=ORDER_STATUS_PREPARE,
-                             choices=((ORDER_STATUS_PREPARE, '准备中'),
-                             (ORDER_STATUS_NEW, '新订单'),
-                             (ORDER_STATUS_PARTIALLY_FILLED, '部份完成'),
-                             (ORDER_STATUS_FILLED, '已完成'),
-                             (ORDER_STATUS_PREPARE_CANCEL, '准备取消'),
-                             (ORDER_STATUS_CANCELED, '已取消'),
-                             (ORDER_STATUS_PENDING_CANCEL, '取消中'),
-                             (ORDER_STATUS_REJECTED, '被拒绝'),
-                             (ORDER_STATUS_EXPIRED, '超时'),
-                             (ORDER_STATUS_DELETED, '已删除')))
+    iceberg_quantity = models.DecimalField('冰山交易量', default=0.0,
+                                           null=True, blank=True,
+                                           max_digits=19, decimal_places=8)
+    status = models.CharField('状态', max_length=20,
+                              default=ORDER_STATUS_PREPARE,
+                              choices=((ORDER_STATUS_PREPARE, '准备中'),
+                                       (ORDER_STATUS_NEW, '新订单'),
+                                       (ORDER_STATUS_PARTIALLY_FILLED, '部份完成'),
+                                       (ORDER_STATUS_FILLED, '已完成'),
+                                       (ORDER_STATUS_PREPARE_CANCEL, '准备取消'),
+                                       (ORDER_STATUS_CANCELED, '已取消'),
+                                       (ORDER_STATUS_PENDING_CANCEL, '取消中'),
+                                       (ORDER_STATUS_REJECTED, '被拒绝'),
+                                       (ORDER_STATUS_EXPIRED, '超时'),
+                                       (ORDER_STATUS_DELETED, '已删除')))
     create_at = models.DateTimeField('创建时间', auto_now_add=True)
     update_at = models.DateTimeField('修改时间', auto_now=True)
     extra_info = JSONField('其他信息', null=True, blank=True)
+
+    objects = OrderManager()
 
     class Meta:
         verbose_name = '订单'
@@ -207,7 +221,8 @@ class Order(models.Model):
 
 
 class Trade(models.Model):
-    order = models.ForeignKey(Order, models.SET_NULL, null=True, blank=True, verbose_name='订单')
+    order = models.ForeignKey(Order, models.SET_NULL, null=True, blank=True,
+                              verbose_name='订单')
     quantity = models.DecimalField('数量', max_digits=19, decimal_places=8)
     price = models.DecimalField('价格', max_digits=19, decimal_places=8)
     commission = models.DecimalField('佣金', max_digits=19, decimal_places=8)

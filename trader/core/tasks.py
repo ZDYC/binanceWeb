@@ -7,6 +7,7 @@ from celery import shared_task
 
 from django.conf import settings
 from core.models import Platform, CryptoCoin, Account
+from core.services import platform as services_platform
 
 from django_redis import get_redis_connection
 from fabric import Connection
@@ -16,7 +17,9 @@ log = logging.getLogger(__name__)
 
 @shared_task
 def sync_binance_exchange_info():
+    """update information of binance"""
     binance = Platform.objects.get(slug='binance')
+    services_platform.sync_binance_platform_info(binance)
 
 
 @shared_task

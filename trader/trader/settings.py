@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os
+# from celery.schedule import crontab
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -148,3 +149,17 @@ USE_TZ = False
 STATIC_URL = '/static/'
 
 AUTH_USER_MODEL = 'member.User'
+
+
+CELERY_BROKEN_URL = 'redis://localhost:6379'
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_TASK_TIME_LIMIT = 30
+CELERY_BEAT_SCHEDULE = {
+    'sync_binance_exchange_info': {
+        'task': 'core.tasks.sync_binance_exchange_info',
+        'schedule': 3600.0
+    }
+}
+
+
+REST_FRAMEWORK = {}

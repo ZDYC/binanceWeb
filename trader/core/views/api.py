@@ -99,3 +99,4 @@ def create_order_view(request):
 @csrf_exempt
 @login_required
 def add_account(request):
+    pass

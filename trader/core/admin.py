@@ -84,6 +84,8 @@ class AccountAdmin(admin.ModelAdmin):
 
 class MarketAdmin(admin.ModelAdmin):
     list_display = ['platform', 'symbol', 'diaable']
+    search_fields = ['symbol']
+    list_filter = ['symbol']
 
 
 class OrderAdmin(admin.ModelAdmin):

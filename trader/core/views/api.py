@@ -25,8 +25,8 @@ def index_view(request):
 
 @csrf_exempt
 def login_view(request):
-    binance = Platform.objects.get(slug='binance')
-    services_platform.sync_binance_platform_info(binance)
+    # binance = Platform.objects.get(slug='binance')
+    # services_platform.sync_binance_platform_info(binance)
     username = request.POST.get('username', '')
     password = request.POST.get('password', '')
     if '' in (username, password):
@@ -94,3 +94,8 @@ def create_order_view(request):
         except Exception as e:
             print(e)
     return rsp('%s' % user.account)
+
+
+@csrf_exempt
+@login_required
+def add_account(request):
